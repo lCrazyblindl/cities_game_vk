@@ -59,8 +59,8 @@ try:
     members_button = find_selector('button[class="_im_chat_members im-page--members"]')
     members_button.click()
     members = []
-    # i = 2 если есть кнопка add members, 1 в ином случае
-    i = 2
+    # i = 3 если есть кнопка add members и нужно убрать саму группу (не ответит), 1 в ином случае
+    i = 3
     while True:
         member = find_selector(f'div .ChatSettingsMembersWidget__list > ul > li:nth-child({i}) > div.ListItem__main > div.Entity > div.Entity__main > div > a')
         members.append(member.get_attribute('href')[15::])
@@ -71,7 +71,7 @@ try:
     close_members_button.click()
     used_cities = []
     losers = ['id471672657']
-    type_message_in_chat('я запустился')
+    type_message_in_chat('Я готов')
     # начинаем игру после команды старт
     while True:
         last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
@@ -92,7 +92,7 @@ try:
         if '@id471672657' not in last_message2 and 'тебе на' in last_message2.lower() and last_message2.count('@') == 1:
             city_in_message = ''
             for i in range(len(last_message2)):
-                if last_message2[i].isalpha():
+                if last_message2[i] != '.' and last_message2[i] != ',':
                     city_in_message += last_message2[i]
                 else:
                     break
@@ -117,17 +117,20 @@ try:
                 random_participant = randint(0, len(members)-1)
             # сообщение с передачей хода
             used_cities.append(cities[random_city])
-            type_message_in_chat(f'{cities[random_city]}. @{members[random_participant]},'
+            type_message_in_chat(f'{cities[random_city]}. @{members[random_participant]}'
                                  f' тебе на {cities[random_city][last_character].upper()}')
             # добавляем себе ход, т.к. сходили первый раз
             turns += 1
             # проверка ответа собеседника
             last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
             last_message2 = last_message.text
+            iteration = 0
             while True:
-                time.sleep(5)
+                time.sleep(1)
                 last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
-                if last_message.text == last_message2:
+                if last_message.text != last_message2:
+                    break
+                if iteration == 10 and last_message.text == last_message2:
                     losers.append(members[random_participant])
                     # если все участники чата уже выбыли
                     if set(members) == set(losers):
@@ -144,8 +147,8 @@ try:
                         f' @{members[random_participant2]} тебе на {cities[random_city][last_character].upper()}')
                         random_participant = random_participant2
                         last_message2 = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child').text
-                else:
-                    break
+                        iteration = 0
+                iteration += 1
 
         # выглядит как ненужный блок
         '''last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
@@ -165,6 +168,7 @@ try:
             if loser_nickname not in losers:
                 losers.append(loser_nickname)
 
+
         if '@id471672657' in last_message.text and 'тебе на' in last_message.text.lower():
             text_without_city = False
             last_message2 = last_message.text
@@ -177,7 +181,7 @@ try:
                 if not text_without_city:
                     city_in_message = ''
                     for i in range(len(last_message2)):
-                        if last_message2[i].isalpha():
+                        if last_message2[i] != '.' and last_message2[i] != ',':
                             city_in_message += last_message2[i]
                         else:
                             break
@@ -217,10 +221,13 @@ try:
                     # проверка ответа собеседника
                     last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
                     last_message2 = last_message.text
+                    iteration = 0
                     while True:
-                        time.sleep(5)
+                        time.sleep(1)
                         last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
-                        if last_message.text == last_message2:
+                        if last_message.text != last_message2:
+                            break
+                        if iteration == 10 and last_message.text == last_message2:
                             losers.append(members[random_participant])
                             # если все участники чата уже выбыли
                             if set(members) == set(losers):
@@ -234,11 +241,11 @@ try:
                                 while members[random_participant2] in losers:
                                     random_participant2 = randint(0, len(members) - 1)
                                 type_message_in_chat(f'Игрок @{members[random_participant]} выбывает,'
-                                                     f' @{members[random_participant2]} тебе на {random_city[-1].upper()}')
+                                                     f' @{members[random_participant2]} тебе на {random_city[last_character].upper()}')
                                 random_participant = random_participant2
                                 last_message2 = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child').text
-                        else:
-                            break
+                                iteration = 0
+                        iteration += 1
                     break
                     # условие на проигрыш, если города кончились, пока тоже не нужно
                 '''elif city == cities[-1]:
@@ -257,7 +264,7 @@ try:
                 losers.append(last_reporter)'''
 
         # условия выхода из бесконечного цикла
-        if turns == 9999:
+        if turns == 999:
             time.sleep(3)
             type_message_in_chat('Я наигрался. Ухожу')
             break
