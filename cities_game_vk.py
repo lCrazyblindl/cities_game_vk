@@ -76,17 +76,29 @@ try:
     while True:
         last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
         if 'старт' not in last_message.text.lower():
-            time.sleep(0.2)
+            time.sleep(0.3)
         else:
             break
     # игра началась
     turns = 0
     leaving = False
     while True:
-        time.sleep(1)
+        time.sleep(0.5)
         last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
         last_reporter_link = find_selector('div.im-mess-stack._im_mess_stack:last-child .im-mess-stack--pname > a')
         last_reporter = last_reporter_link.get_attribute('href')[15::]
+
+        # если кто-то ушел, то добавить его в список выбывших и смотреть на предыдущее сообщение
+        # если он последний, то уйти
+        if 'ухожу' in last_message.text.lower():
+            if last_reporter not in losers:
+                losers.append(last_reporter)
+                last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:nth-last-child(2)')
+            if len(members) == len(losers):
+                leaving = True
+                last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
+                type_message_in_chat('Похоже, что последний участник ушел. Я ухожу')
+
         # сохраняю использованные города, если сообщение было не ко мне
         last_message2 = last_message.text
         if '@id471672657' not in last_message2 and 'тебе на' in last_message2.lower() and last_message2.count('@') == 1:
@@ -126,14 +138,14 @@ try:
             last_message2 = last_message.text
             iteration = 0
             while True:
-                time.sleep(1)
+                time.sleep(0.5)
                 last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
                 if last_message.text != last_message2:
                     break
                 if iteration == 10 and last_message.text == last_message2:
                     losers.append(members[random_participant])
                     # если все участники чата уже выбыли
-                    if set(members) == set(losers):
+                    if len(members) == len(losers):
                         type_message_in_chat(f'Игрок @{members[random_participant]} выбывает.'
                                              f' Похоже, что все участники выбыли. Я ухожу')
                         leaving = True
@@ -167,7 +179,6 @@ try:
                 i += 1
             if loser_nickname not in losers:
                 losers.append(loser_nickname)
-
 
         if '@id471672657' in last_message.text and 'тебе на' in last_message.text.lower():
             text_without_city = False
@@ -223,14 +234,14 @@ try:
                     last_message2 = last_message.text
                     iteration = 0
                     while True:
-                        time.sleep(1)
+                        time.sleep(0.5)
                         last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
                         if last_message.text != last_message2:
                             break
                         if iteration == 10 and last_message.text == last_message2:
                             losers.append(members[random_participant])
                             # если все участники чата уже выбыли
-                            if set(members) == set(losers):
+                            if len(members) == len(losers):
                                 type_message_in_chat(f'Игрок @{members[random_participant]} выбывает.'
                                                      f' Похоже, что все участники выбыли. Я ухожу')
                                 leaving = True
@@ -265,7 +276,6 @@ try:
 
         # условия выхода из бесконечного цикла
         if turns == 999:
-            time.sleep(3)
             type_message_in_chat('Я наигрался. Ухожу')
             break
         if leaving:
