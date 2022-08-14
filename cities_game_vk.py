@@ -1,3 +1,5 @@
+import random
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
@@ -46,7 +48,7 @@ try:
     login_input.send_keys(login)
     password_input = find_selector('input[name="password"]')
     password_input.send_keys(password)
-    submit_pass_button = find_selector('div[class="vkc__Button__title"]')
+    submit_pass_button = find_selector('span[class="vkuiButton__in Button__in"]')
     submit_pass_button.click()
     # захожу в сообщения
     messages = find_selector('#l_msg')
@@ -60,7 +62,7 @@ try:
     members_button.click()
     members = []
     # i = 3 если есть кнопка add members и нужно убрать саму группу (не ответит), 1 в ином случае
-    i = 3
+    i = 2
     while True:
         member = find_selector(f'div .ChatSettingsMembersWidget__list > ul > li:nth-child({i}) > div.ListItem__main > div.Entity > div.Entity__main > div > a')
         members.append(member.get_attribute('href')[15::])
@@ -93,7 +95,7 @@ try:
         if 'ухожу' in last_message.text.lower():
             if last_reporter not in losers:
                 losers.append(last_reporter)
-                last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:nth-last-child(2)')
+            last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:nth-last-child(2)')
             if len(members) == len(losers):
                 leaving = True
                 last_message = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child')
@@ -155,7 +157,7 @@ try:
                         random_participant2 = randint(0, len(members) - 1)
                         while members[random_participant2] in losers:
                             random_participant2 = randint(0, len(members) - 1)
-                        type_message_in_chat(f'Игрок @{members[random_participant]} выбывает,'
+                        type_message_in_chat(f'Игрок @{members[random_participant]} выбывает.'
                         f' @{members[random_participant2]} тебе на {cities[random_city][last_character].upper()}')
                         random_participant = random_participant2
                         last_message2 = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child').text
@@ -184,9 +186,11 @@ try:
             text_without_city = False
             last_message2 = last_message.text
             # если кто-то другой выбывает и ход переходит ко мне
-            if 'выбывает' in last_message2:
-                new_city_character = last_message.text[-1]
+            if 'выбывает' in last_message2.lower():
+                new_city_character = last_message2[-1]
                 text_without_city = True
+                if new_city_character.lower() not in possible_characters:
+                    new_city_character = random.choice(possible_characters)
             else:
                 # если мне передали ход, то ищем название города в этом сообщении
                 if not text_without_city:
@@ -251,7 +255,7 @@ try:
                                 random_participant2 = randint(0, len(members) - 1)
                                 while members[random_participant2] in losers:
                                     random_participant2 = randint(0, len(members) - 1)
-                                type_message_in_chat(f'Игрок @{members[random_participant]} выбывает,'
+                                type_message_in_chat(f'Игрок @{members[random_participant]} выбывает.'
                                                      f' @{members[random_participant2]} тебе на {random_city[last_character].upper()}')
                                 random_participant = random_participant2
                                 last_message2 = find_selector('div:last-child  > div.im-mess-stack--content > ul > li:last-child').text
